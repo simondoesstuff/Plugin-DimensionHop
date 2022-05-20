@@ -9,6 +9,7 @@ import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.Recipe
 import org.bukkit.inventory.ShapedRecipe
 import org.bukkit.inventory.ShapelessRecipe
 import org.bukkit.inventory.meta.PotionMeta
@@ -20,8 +21,13 @@ object CustomItemBuilder {
     val netherBottleNamespace = NamespacedKey(DimensionHopPlugin.inst, "nether_bottle")
     val endBottleNamespace = NamespacedKey(DimensionHopPlugin.inst, "end_bottle")
 
-    object NetherBottle {
-        fun itemStack() = ItemStack(Material.POTION).apply {
+    interface CustomItem {
+        fun itemStack(): ItemStack
+        val recipe: Recipe
+    }
+
+    object NetherBottle: CustomItem {
+        override fun itemStack() = ItemStack(Material.POTION).apply {
             itemMeta = (itemMeta as PotionMeta).apply {
                 color = Color.MAROON
 //                basePotionData = PotionData(PotionType.FIRE_RESISTANCE)
@@ -39,18 +45,18 @@ object CustomItemBuilder {
             }
         }
 
-        val recipe = ShapelessRecipe(netherBottleNamespace, itemStack()).apply {
+        override val recipe = ShapelessRecipe(netherBottleNamespace, itemStack()).apply {
             addIngredient(ItemStack(Material.POTION).apply {
                 itemMeta = (itemMeta as PotionMeta).apply {
-                    basePotionData = PotionData(PotionType.AWKWARD)
+                    basePotionData = PotionData(PotionType.THICK)
                 }
             })
             addIngredient(Material.CRYING_OBSIDIAN)
         }
     }
 
-    object EndBottle {
-        fun itemStack() = ItemStack(Material.POTION).apply {
+    object EndBottle: CustomItem {
+        override fun itemStack() = ItemStack(Material.POTION).apply {
             itemMeta = (itemMeta as PotionMeta).apply {
                 color = Color.BLACK
 //                basePotionData = PotionData(PotionType.FIRE_RESISTANCE)
@@ -68,10 +74,10 @@ object CustomItemBuilder {
             }
         }
 
-        val recipe = ShapelessRecipe(endBottleNamespace, itemStack()).apply {
+        override val recipe = ShapelessRecipe(endBottleNamespace, itemStack()).apply {
             addIngredient(ItemStack(Material.POTION).apply {
                 itemMeta = (itemMeta as PotionMeta).apply {
-                    basePotionData = PotionData(PotionType.AWKWARD)
+                    basePotionData = PotionData(PotionType.THICK)
                 }
             })
             addIngredient(Material.DRAGON_HEAD)
