@@ -1,7 +1,8 @@
 package tech.simonwalker.dimensionhop
 
-import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -10,7 +11,6 @@ import org.bukkit.Material
 import org.bukkit.World.Environment
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
-import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerEvent
 import org.bukkit.event.player.PlayerItemConsumeEvent
 import org.bukkit.event.player.PlayerMoveEvent
@@ -19,13 +19,9 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import tech.simonwalker.dimensionhop.LocationUtils.DimensionCordConvertUtil
 import tech.simonwalker.dimensionhop.LocationUtils.SafeLocationUtil
-import java.util.*
-import kotlin.coroutines.EmptyCoroutineContext
 
-class DrinkEvent : Listener {
-    private val closures = mutableMapOf<UUID, Channel<PlayerEvent>>()
-
-    private suspend fun eventConsumer(player: Player, channel: Channel<PlayerEvent>) {
+class DrinkEvent : CoroutinePlayerEventListener() {
+    override suspend fun eventConsumer(player: Player, channel: Channel<PlayerEvent>) {
         val drinkEvent = waitFor<PlayerItemConsumeEvent>(channel)
 
         var targetDimension: Environment
@@ -95,45 +91,12 @@ class DrinkEvent : Listener {
         nauseaTimerJob.cancel()
     }
 
-    private fun runSync(r: () -> Unit) = DimensionHopPlugin.runnable(r).runTask()
-
-    private suspend inline fun <reified T : PlayerEvent> waitFor(channel: Channel<PlayerEvent>): T {
-        while (true) {
-            channel.receive().also {
-                if (it is T) return it
-            }
-        }
-    }
-
-    private fun processEvents(e: PlayerEvent) {
-        val uuid = e.player.uniqueId
-        val closure = closures[uuid]
-
-        // here we are starting a new coroutine
-        if (closure == null) {
-            // the channel has to have an unlimited buffer so that no threads
-            // can be blocked waiting for the channel to empty
-            closures[uuid] = Channel<PlayerEvent>(Channel.UNLIMITED).also {
-                CoroutineScope(EmptyCoroutineContext).launch {
-                    // here we start the coroutine as a background task
-                    // and remove the channel from the map when it completes
-                    it.send(e)
-                    eventConsumer(e.player, it)
-                    closures.remove(uuid)
-                }
-            }
-        } else {
-            // coroutine already exists, just feed it
-            closure.let { runBlocking { it.send(e) } }
-        }
-    }
-
     @EventHandler
     fun onDrink(event: PlayerItemConsumeEvent) = processEvents(event)
 
     @EventHandler
     fun onMove(event: PlayerMoveEvent) {
-        if (event.from.toVector() == event.to.toVector()) return    // ignore if it was only a head movement
-        processEvents(event)
+        // ignore if it was only a head movement
+        if (event.from.toVector() != event.to.toVector()) processEvents(event)
     }
 }

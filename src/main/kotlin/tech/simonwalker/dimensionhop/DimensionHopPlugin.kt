@@ -1,13 +1,5 @@
 package tech.simonwalker.dimensionhop
 
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.TextColor
-import org.bukkit.Material
-import org.bukkit.NamespacedKey
-import org.bukkit.enchantments.Enchantment
-import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.ShapedRecipe
-import org.bukkit.persistence.PersistentDataType.STRING
 import org.bukkit.plugin.java.JavaPlugin
 
 class DimensionHopPlugin : JavaPlugin() {
