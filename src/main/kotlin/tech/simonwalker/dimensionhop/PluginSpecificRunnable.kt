@@ -4,6 +4,10 @@ import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scheduler.BukkitTask
 
+/**
+ * A bukkit runnable that remembers a specific plugin
+ * for later reference in the task methods.
+ */
 abstract class PluginSpecificRunnable(private val plugin: Plugin) : BukkitRunnable() {
     fun runTask(): BukkitTask {
         return super.runTask(plugin)

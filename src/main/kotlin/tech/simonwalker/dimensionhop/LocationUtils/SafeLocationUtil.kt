@@ -1,4 +1,4 @@
-package tech.simonwalker.dimensionhop
+package tech.simonwalker.dimensionhop.LocationUtils
 
 import org.bukkit.Location
 import org.bukkit.World
@@ -88,7 +88,7 @@ object SafeLocationUtil {
      *
      * @param loc The location to adjust
      */
-    fun getSafeDestination(loc: Location): Location {
+    fun adjustToSafeLocation(loc: Location): Location {
         if (loc.world == null) {
             throw Exception("World must not be null")
         }
