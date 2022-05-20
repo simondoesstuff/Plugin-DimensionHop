@@ -1,0 +1,6 @@
+name: '${name}'
+version: '${version}'
+main: tech.simonwalker.dimensionhop.DimensionHopPlugin
+api-version: 1.18
+authors: [ simondoesstuff ]
+depend: [ kotlin-stdlib ]

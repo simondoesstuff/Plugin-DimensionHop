@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.7.0-Beta'
+}
+
+group = 'tech.simonwalker'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://papermc.io/repo/repository/maven-public/")
+    }
+}
+
+dependencies {
+    compileOnly 'io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT'
+    // kotlin stdlib should not be shaded into jar and provided at runtime
+    // with spigot kotlin-stdlib resource
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    // kotlinx should be shaded into jar
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1"
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
+jar {
+    destinationDirectory.set(file(jarDir))
+    from {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        configurations.compileClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
+
+processResources {
+    def props = [version: version, 'name': rootProject.name]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
