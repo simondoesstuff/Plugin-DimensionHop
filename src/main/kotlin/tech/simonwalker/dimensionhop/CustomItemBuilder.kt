@@ -16,11 +16,12 @@ import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
 
 object CustomItemBuilder {
-    val netherBottleNamespace = NamespacedKey(PortalBottlesPlugin.inst, "nether_bottle")
-    val endBottleNamespace = NamespacedKey(PortalBottlesPlugin.inst, "end_bottle")
+    private val netherBottleNamespace = NamespacedKey(PortalBottlesPlugin.inst, "nether_bottle")
+    private val endBottleNamespace = NamespacedKey(PortalBottlesPlugin.inst, "end_bottle")
 
     interface CustomItem {
         fun itemStack(): ItemStack
+        fun matches(item: ItemStack): Boolean
         val recipe: Recipe
     }
 
@@ -42,6 +43,8 @@ object CustomItemBuilder {
                 persistentDataContainer.set(netherBottleNamespace, PersistentDataType.BYTE, 1)
             }
         }
+
+        override fun matches(item: ItemStack) = item.itemMeta.persistentDataContainer.has(netherBottleNamespace)
 
         override val recipe = ShapelessRecipe(netherBottleNamespace, itemStack()).apply {
             addIngredient(ItemStack(Material.POTION).apply {
@@ -71,6 +74,8 @@ object CustomItemBuilder {
                 persistentDataContainer.set(endBottleNamespace, PersistentDataType.BYTE, 1)
             }
         }
+
+        override fun matches(item: ItemStack) = item.itemMeta.persistentDataContainer.has(endBottleNamespace)
 
         override val recipe = ShapelessRecipe(endBottleNamespace, itemStack()).apply {
             addIngredient(ItemStack(Material.POTION).apply {

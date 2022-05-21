@@ -30,14 +30,14 @@ class DrinkEvent : CoroutinePlayerEventListener() {
         // here we initialize targetDimension and refundItem.
         // if the player is in an invalid dimension (endBottle, but in nether), we
         // also cancel the coroutine.
-        drinkEvent.item.itemMeta.persistentDataContainer.let {
+        drinkEvent.item.let {
             var value: Environment  // Not a dimensional bottle
             val localDimension = player.world.environment
 
-            if (it.has(CustomItemBuilder.netherBottleNamespace)) {
+            if (CustomItemBuilder.NetherBottle.matches(it)) {
                 value = Environment.NETHER
                 refundItem = ItemStack(Material.CRYING_OBSIDIAN)
-            } else if (it.has(CustomItemBuilder.endBottleNamespace)) {
+            } else if (CustomItemBuilder.EndBottle.matches(it)) {
                 value = Environment.THE_END
                 refundItem = ItemStack(Material.DRAGON_HEAD)
             } else return
