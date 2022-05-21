@@ -72,11 +72,9 @@ class DrinkEvent : CoroutinePlayerEventListener() {
 
         // continue teleporting
         val translatedLocation = DimensionCordConvertUtil.convert(player.location, targetDimension)
-        player.sendMessage("attempting to teleport to ${translatedLocation}")
 
         // if the adjusted safe location isnt null
         SafeLocationUtil.adjustToSafeLocation(translatedLocation)?.let {
-            player.sendMessage("Redirected to safe location: $it")
             nauseaTimerJob.cancel()
             delay(500)
             runSync {
