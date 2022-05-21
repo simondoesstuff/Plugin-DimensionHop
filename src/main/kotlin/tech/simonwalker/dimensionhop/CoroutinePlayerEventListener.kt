@@ -20,7 +20,7 @@ abstract class CoroutinePlayerEventListener : Listener {
 
     protected abstract suspend fun eventConsumer(player: Player, channel: Channel<PlayerEvent>)
 
-    protected fun runSync(r: () -> Unit) = DimensionHopPlugin.runnable(r).runTask()
+    protected fun runSync(r: () -> Unit) = PortalBottlesPlugin.runnable(r).runTask()
 
     protected suspend inline fun <reified T : PlayerEvent> waitFor(channel: Channel<PlayerEvent>): T {
         while (true) {

@@ -7,10 +7,8 @@ import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Color
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
-import org.bukkit.enchantments.Enchantment
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.Recipe
-import org.bukkit.inventory.ShapedRecipe
 import org.bukkit.inventory.ShapelessRecipe
 import org.bukkit.inventory.meta.PotionMeta
 import org.bukkit.persistence.PersistentDataType
@@ -18,8 +16,8 @@ import org.bukkit.potion.PotionData
 import org.bukkit.potion.PotionType
 
 object CustomItemBuilder {
-    val netherBottleNamespace = NamespacedKey(DimensionHopPlugin.inst, "nether_bottle")
-    val endBottleNamespace = NamespacedKey(DimensionHopPlugin.inst, "end_bottle")
+    val netherBottleNamespace = NamespacedKey(PortalBottlesPlugin.inst, "nether_bottle")
+    val endBottleNamespace = NamespacedKey(PortalBottlesPlugin.inst, "end_bottle")
 
     interface CustomItem {
         fun itemStack(): ItemStack

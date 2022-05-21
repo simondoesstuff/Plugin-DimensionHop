@@ -1,6 +1,7 @@
 name: '${name}'
 version: '${version}'
-main: tech.simonwalker.dimensionhop.DimensionHopPlugin
+description: "Adds two custom potion bottles that can be used to teleport between worlds."
+main: tech.simonwalker.dimensionhop.PortalBottlesPlugin
 api-version: 1.18
 authors: [ simondoesstuff ]
 depend: [ kotlin-stdlib ]

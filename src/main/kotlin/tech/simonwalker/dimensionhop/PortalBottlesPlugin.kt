@@ -2,9 +2,9 @@ package tech.simonwalker.dimensionhop
 
 import org.bukkit.plugin.java.JavaPlugin
 
-class DimensionHopPlugin : JavaPlugin() {
+class PortalBottlesPlugin : JavaPlugin() {
     companion object {
-        lateinit var inst: DimensionHopPlugin
+        lateinit var inst: PortalBottlesPlugin
             private set
 
         // A static call to make BukkitRunnables easier to work with.
