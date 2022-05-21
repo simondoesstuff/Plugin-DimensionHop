@@ -58,7 +58,7 @@ class DrinkEvent : CoroutinePlayerEventListener() {
         }
 
         // to give the player nausea, we have to add it every tick
-        val nauseaTimerJob = DimensionHopPlugin.runnable {
+        val nauseaTimerJob = PortalBottlesPlugin.runnable {
             player.addPotionEffect(PotionEffect(PotionEffectType.CONFUSION, 90, 1, false, true, false))
         }.runTaskTimer(0, 1)
 
@@ -71,24 +71,28 @@ class DrinkEvent : CoroutinePlayerEventListener() {
         }
 
         // continue teleporting
-
         val translatedLocation = DimensionCordConvertUtil.convert(player.location, targetDimension)
+        player.sendMessage("attempting to teleport to ${translatedLocation}")
 
-        try {
-            SafeLocationUtil.adjustToSafeLocation(translatedLocation).let {
-                runSync { player.playEffect(EntityEffect.TELEPORT_ENDER) }
-                delay(500)
-                runSync { player.teleport(it) }
-            }
-        } catch (e: Exception) {
-            player.sendMessage(Component.text("You could not be teleported because it would be fatal.").color(NamedTextColor.DARK_PURPLE).decorate(TextDecoration.ITALIC))
+        // if the adjusted safe location isnt null
+        SafeLocationUtil.adjustToSafeLocation(translatedLocation)?.let {
+            player.sendMessage("Redirected to safe location: $it")
+            nauseaTimerJob.cancel()
+            delay(500)
             runSync {
-                player.playEffect(EntityEffect.VILLAGER_ANGRY)
-                player.inventory.addItem(refundItem)
+                player.playEffect(EntityEffect.TELEPORT_ENDER)
+                player.teleport(it)
             }
+            return
         }
 
+        // we failed to find a safe location
+        player.sendMessage(Component.text("You could not be teleported because it would be fatal.").color(NamedTextColor.DARK_PURPLE).decorate(TextDecoration.ITALIC))
         nauseaTimerJob.cancel()
+        runSync {
+            player.playEffect(EntityEffect.VILLAGER_ANGRY)
+            player.inventory.addItem(refundItem)
+        }
     }
 
     @EventHandler

@@ -1,30 +1,35 @@
 package tech.simonwalker.dimensionhop.LocationUtils
 
 import org.bukkit.Location
-import org.bukkit.World
+import org.bukkit.Material
 import org.bukkit.block.BlockFace
 import org.bukkit.util.Vector
-import kotlin.math.round
-import kotlin.math.roundToInt
 
 
-/**
- * Nearly all of the following code is copied from
- * EssentialX / Essentials. It has been refactored into
- * kotlin and cleaned up.
- */
 object SafeLocationUtil {
-    private const val RADIUS = 3
+    val damagingBlocks = arrayOf(
+        Material.CACTUS,
+        Material.CAMPFIRE,
+        Material.FIRE,
+        Material.MAGMA_BLOCK,
+        Material.SOUL_CAMPFIRE,
+        Material.SOUL_FIRE,
+        Material.SWEET_BERRY_BUSH,
+        Material.WITHER_ROSE,
+        Material.LAVA
+    )
 
-    // Initializing VOLUME
     // Create a list of all the vectors in a cube within a radius
-    private val VOLUME: MutableList<Vector> = mutableListOf<Vector>().apply {
-        for (x in -RADIUS..RADIUS)
-            for (y in -RADIUS..RADIUS)
-                for (z in -RADIUS..RADIUS)
+    private val searchCube: MutableList<Vector> = mutableListOf<Vector>().apply {
+        val radiusHori = 5
+        val radiusVerti = 10
+
+        for (y in -radiusVerti..radiusVerti)
+            for (x in -radiusHori..radiusHori)
+                for (z in -radiusHori..radiusHori)
                     add(Vector(x, y, z))
 
-        sortWith(Comparator.comparingInt { a -> (a.x * a.x + a.y * a.y + a.z * a.z).toInt() })
+        sortedBy { it.x + it.y + it.z }
     }
 
     /**
@@ -33,25 +38,24 @@ object SafeLocationUtil {
      * @param location Location to check
      * @return True if location is safe
      */
-    fun isSafeLocation(location: Location): Boolean {
+    fun isLocationSafe(location: Location): Boolean {
+        fun Material.isDamaging(): Boolean = this in damagingBlocks
+
         val feet = location.block
 
-        // check feet
-        if (!feet.type.isOccluding && !feet.location.add(0.0, 1.0, 0.0).block.type.isOccluding) {
-            return false // not transparent (will suffocate)
-        }
-
-        // check head
-        feet.getRelative(BlockFace.UP).also {
-            if (!it.type.isOccluding) {
-                return false // not transparent (will suffocate)
-            }
+        // check feet and head
+        arrayOf(feet, feet.getRelative(BlockFace.UP)).forEach {
+            if (it.type.isOccluding) return false
+            if (it.type.isDamaging()) return false
         }
 
         // check ground
         feet.getRelative(BlockFace.DOWN).also {
-            return it.type.isSolid
+            if (!it.type.isSolid) return false
+            if (it.type.isDamaging()) return false
         }
+
+        return true
     }
 
     /**
@@ -61,10 +65,10 @@ object SafeLocationUtil {
         val world = loc.world
         val center = world.worldBorder.center
 
-        fun cordInBorder(i: Int, centerAxis: Int): Int {
+        fun axisInRange(i: Double, center: Double): Double {
             val radius = world.worldBorder.size.toInt() / 2
-            val i1 = centerAxis - radius
-            val i2 = centerAxis + radius
+            val i1 = center - radius
+            val i2 = center + radius
 
             if (i < i1) {
                 return i1
@@ -75,12 +79,7 @@ object SafeLocationUtil {
             return i
         }
 
-        return Location(
-            world,
-            cordInBorder(loc.blockX, center.blockX).toDouble(),
-            loc.blockY.toDouble(),
-            cordInBorder(loc.blockZ, center.blockZ).toDouble()
-        )
+        return Location(world, axisInRange(loc.x, center.x), loc.y, axisInRange(loc.z, center.z))
     }
 
     /**
@@ -88,79 +87,24 @@ object SafeLocationUtil {
      *
      * @param loc The location to adjust
      */
-    fun adjustToSafeLocation(loc: Location): Location {
-        if (loc.world == null) {
-            throw Exception("World must not be null")
-        }
-
-        val world: World = loc.world
-        val worldMinY: Int = world.minHeight
-        val worldLogicalY: Int = world.logicalHeight
-        val worldMaxY = if (loc.blockY < worldLogicalY) worldLogicalY else world.maxHeight
-
-        var x: Int = loc.blockX
-        var y = loc.y.roundToInt()
-        var z: Int = loc.blockZ
-
-        with(adjustToWorldBorder(Location(world, x.toDouble(), y.toDouble(), z.toDouble()))) {
-            x = blockX
-            z = blockZ
-        }
-
-        val origX: Int = x
-        val origY: Int = y
-        val origZ: Int = z
-
-        while (!isSafeLocation(Location(world, x.toDouble(), y.toDouble(), z.toDouble()))) {
-            y -= 1
-            if (y < 0) {
-                y = origY
-                break
+    fun adjustToSafeLocation(loc: Location): Location? {
+        adjustToWorldBorder(loc).also {
+            if (isLocationSafe(it)) {
+                return it
             }
         }
 
-        if (!isSafeLocation(Location(world, x.toDouble(), y.toDouble(), z.toDouble()))) {
-            x = if (round(loc.x).toInt() == origX) x - 1 else x + 1
-            z = if (round(loc.z).toInt() == origZ) z - 1 else z + 1
-        }
-
-        var i = 0
-
-        while (!isSafeLocation(Location(world, x.toDouble(), y.toDouble(), z.toDouble()))) {
-            i++
-
-            if (i >= VOLUME.size) {
-                x = origX
-                y = (origY + RADIUS).coerceIn(worldMinY, worldMaxY)
-                z = origZ
-                break
-            }
-
-            x = (origX + VOLUME[i].x).toInt()
-            y = (origY + VOLUME[i].y.toInt()).coerceIn(worldMinY, worldMaxY)
-            z = (origZ + VOLUME[i].z).toInt()
-        }
-
-        while (!isSafeLocation(Location(world, x.toDouble(), y.toDouble(), z.toDouble()))) {
-            y += 1
-            if (y >= worldMaxY) {
-                x += 1
-                break
-            }
-        }
-
-        while (!isSafeLocation(Location(world, x.toDouble(), y.toDouble(), z.toDouble()))) {
-            y -= 1
-            if (y <= worldMinY + 1) {
-                x += 1
-                // Allow spawning at the top of the world, but not above the nether roof
-                y = (world.getHighestBlockYAt(x, z) + 1).coerceAtMost(worldMaxY)
-                if (x - 48 > loc.blockX) {
-                    throw Exception("No safe location found.")
+        // in order to find a safe location, we will
+        // iterate through all the vectors in a cube
+        // and check if they are safe
+        for (vector in searchCube) {
+            loc.clone().add(vector).also {
+                if (isLocationSafe(it)) {
+                    return it
                 }
             }
         }
 
-        return Location(world, x + 0.5, y.toDouble(), z + 0.5, loc.yaw, loc.pitch)
+        return null
     }
 }
